@@ -1,0 +1,4 @@
+﻿  main.c
+C:\Users\jsjph\source\repos\game_framework.c\game_framework.c\main.c(46,27): warning C4013: 'strlen'이(가) 정의되지 않았습니다. extern은 int형을 반환하는 것으로 간주합니다.
+C:\Users\jsjph\source\repos\game_framework.c\game_framework.c\main.c(49,8): warning C4013: 'strcpy'이(가) 정의되지 않았습니다. extern은 int형을 반환하는 것으로 간주합니다.
+  game_framework.c.vcxproj -> C:\Users\jsjph\source\repos\game_framework.c\Debug\game_framework.exe
