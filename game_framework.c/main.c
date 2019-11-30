@@ -2,9 +2,11 @@
 #include <time.h>
 #include <conio.h>
 #include <malloc.h>
+#include <string.h>
 #include "Screen.h"
 #include "FPS.h"
 #pragma warning(disable:4996)
+#define GAME_MAX_WIDTH 40
 
 FPSData FPS;
 
@@ -22,7 +24,6 @@ typedef struct
 	char* strPlayer; // = "└─●─┘"; 주인공 캐릭터
 	int nLength; // 주인공 캐릭터 전체 길이
 }Player;
-Player g_Player;
 
 typedef struct Ball
 {
@@ -31,8 +32,20 @@ typedef struct Ball
 	clock_t moveTime;
 	clock_t oldTime;
 }Ball;
-Ball g_Ball;
 
+typedef struct GoalPost
+{
+	Position position;
+	int nLength;
+	int nLineX[7];
+	int nDist;
+	clock_t moveTime;
+	clock_t oldTime;
+}GoalPost;
+
+Player g_Player;
+Ball g_Ball;
+GoalPost g_Post;
 void Init()
 {
 	FPSInit(&FPS);
@@ -53,7 +66,28 @@ void Init()
 	g_Ball.position.x = g_Player.position.x-1;
 	g_Ball.position.y = g_Player.position.y-1;
 	g_Ball.moveTime = 100;
+	
+	//GoalPost 초기화
+	g_Post.position.x = 20;
+	g_Post.position.y = 3;
+	g_Post.nLength = 1;
+	g_Post.moveTime = 100;
+	g_Post.oldTime = clock();
+	g_Post.nDist = 1;
+	
+	int nLength = g_Post.nLength * 2 + 1;
+	//for문 수정
+	int i = 0;
+	for (; i < nLength; i++)
+	{
+		//원래는 이건데, 나는 칼럼이 아니라 --을 사용할 거니 *2를 안할거야 
+		//g_Post.nLineX[i] = g_Post.position.x + 2 * (i + 1);
+		// -을 사용할까.. -을 두 개 써서 --을 사용할까?	
+		// --을 써도.. 여기서 *2는 안하는 게 맞지..? 
+		g_Post.nLineX[i] = 	g_Post.position.x + i + 1; 
+	}
 }
+
 void Update()
 {
 	//공의 이동처리
@@ -81,15 +115,45 @@ void Update()
 		g_Ball.position.y = g_Player.position.y - 1;
 
 	}
+	
+	
+	//goal post 이동처리
+	clock_t CurTime = clock();
+	if (CurTime - g_Post.oldTime > g_Post.moveTime)
+	{
+		int nLength = g_Post.nLength * 2 + 1;
+		g_Post.oldTime = CurTime;
+		if (g_Post.position.x + g_Post.nDist >= 0 && ((g_Post.nLineX[nLength - 1] + 3) + g_Post.nDist) <= GAME_MAX_WIDTH)
+		{
+			g_Post.position.x += g_Post.nDist;
+			
+			//for문 수정 
+			int i = 0;
+			for(;i < nLength ; i++)
+			{
+				g_Post.nLineX[i] = g_Post.position.x + 1 * (i+1);
+			}
+		}
+		else
+		{
+			g_Post.nDist *= -1;
+		}
+	}
 }
+
 void Render()
 {
 	ScreenClear();
 	// 출력코드
 	DrawFPS(&FPS);
-
 	char string[100] = { 0, };
+	sprintf(string, "주인공 이동좌표 : %d, %d", g_Player.position.x, g_Player.position.y);
+	ScreenPrint(0, 1, string);
+	//ScreenPrint(0, 0, FPS.FPSTextBuffer);
 
+	
+
+	//player render
 	int printX = g_Player.position.x - g_Player.center.x;
 	if (printX < 0)
 	{
@@ -118,10 +182,19 @@ void Render()
 	//공 화면 그리기
 	ScreenPrint(g_Ball.position.x, g_Ball.position.y, "@");
 
-
-	sprintf(string, "주인공 이동좌표 : %d, %d", g_Player.position.x, g_Player.position.y);
-	ScreenPrint(0, 3, string);
-	//ScreenPrint(0, 0, FPS.FPSTextBuffer);
+	// goal post render
+	ScreenPrint(g_Post.position.x, g_Post.position.y, "ㅁ");
+	int nLength = g_Post.nLength * 2 + 1;
+	//for문 수정
+	int i = 0;
+	for (; i < nLength; i++)
+	{
+		ScreenPrint(g_Post.nLineX[i], g_Post.position.y, "-");
+	}
+	ScreenPrint(g_Post.nLineX[nLength - 1] + 1, g_Post.position.y, "ㅁ");
+	
+	
+	// screen flipping	
 	ScreenFlipping();
 }
 void Release()
